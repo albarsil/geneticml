@@ -1,8 +1,7 @@
-from abc import ABC, abstractmethod
-from typing import Callable
+from abc import abstractmethod
 
 
-class BaseEstimator(ABC):
+class BaseEstimator(object):
 
     """
     A base class to be used for model optimization
@@ -74,12 +73,11 @@ class BaseEstimator(ABC):
         pass
 
     @abstractmethod
-    def predict(self, x, y) -> None:
+    def predict(self, x) -> None:
         """
         Method that performs model inference. The inheriting class must implement this method.
 
         Parameters:
             x (?): The data set
-            y (?): The correct label set
         """
         pass
