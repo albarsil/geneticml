@@ -7,23 +7,27 @@ Credit:
 """
 
 from abc import ABC
-from typing import List
+from typing import List, Type, TypeVar
+
 from functools import reduce
 from operator import add
 import random
 
 from geneticml.algorithms import BaseEstimator
 
+T = TypeVar('T', bound=BaseEstimator)
+
 
 class BaseOptimizer(ABC):
     def __init__(self) -> None:
+        super().__init__()
         pass
 
 
 class EvolutionaryOptimizer(BaseOptimizer):
     """Class that implements genetic algorithm for MLP optimization."""
 
-    def __init__(self, parameters: dict, retain: float = 0.4, random_select: float = 0.1, mutate_chance: float = 0.2, max_children: int = 2) -> None:
+    def __init__(self, member_class: Type[T], parameters: dict, retain: float = 0.4, random_select: float = 0.1, mutate_chance: float = 0.2, max_children: int = 2) -> None:
         """
         Create an optimizer.
 
@@ -34,7 +38,8 @@ class EvolutionaryOptimizer(BaseOptimizer):
             mutate_chance (float): Probability a estimator will be randomly mutated
             max_children (int): The maximum size of babies that every family could have
         """
-        super.__init__()
+        super().__init__()
+        self._member_class = member_class
         self.mutate_chance = mutate_chance
         self.random_select = random_select
         self.retain = retain
@@ -53,7 +58,7 @@ class EvolutionaryOptimizer(BaseOptimizer):
             params[key] = random.choice(self._parameters[key])
         return params
 
-    def create_population(self, size: int) -> List[BaseEstimator]:
+    def create_population(self, size: int) -> List[T]:
         """
         Create a population of random networks.
 
@@ -64,7 +69,7 @@ class EvolutionaryOptimizer(BaseOptimizer):
             (list): Population of algorithms.BaseAlgorithm objects
         """
 
-        return [BaseEstimator(**self.create_random_set()) for val in range(0, size)]
+        return [self._member_class(self.create_random_set()) for val in range(0, size)]
 
     def grade(self, population: list) -> float:
         """
@@ -79,7 +84,7 @@ class EvolutionaryOptimizer(BaseOptimizer):
         summed = reduce(add, (estimator.fitness for estimator in population))
         return summed / float((len(population)))
 
-    def breed(self, mother: BaseEstimator, father: BaseEstimator) -> List[BaseEstimator]:
+    def breed(self, mother: T, father: T) -> List[T]:
         """
         Make two children as parts of their parents.
 
@@ -93,7 +98,7 @@ class EvolutionaryOptimizer(BaseOptimizer):
 
         children = random.randint(1, self._max_children)
 
-        return [BaseEstimator(parameters={param: random.choice([mother.parameters[param], father.parameters[param]]) for param in self._parameters}) for _ in range(0, children)]
+        return [self._member_class(parameters={param: random.choice([mother.parameters[param], father.parameters[param]]) for param in self._parameters}) for _ in range(0, children)]
 
     def mutate(self, parameters: dict) -> dict:
         """
@@ -114,7 +119,7 @@ class EvolutionaryOptimizer(BaseOptimizer):
 
         return parameters
 
-    def evolve(self, population: List[BaseEstimator]) -> List[BaseEstimator]:
+    def evolve(self, population: List[Type[T]]) -> List[T]:
         """
         Evolve a population of networks.
 
@@ -143,9 +148,9 @@ class EvolutionaryOptimizer(BaseOptimizer):
                 parents.append(individual)
 
         # Randomly mutate some of the networks we're keeping.
-        for individual in parents:
+        for i in range(len(parents)):
             if self.mutate_chance > random.random():
-                individual = BaseEstimator(parameters=self.mutate(individual))
+                parents[i] = self._member_class(parameters=self.mutate(parents[i].parameters))
 
         # Now find out how many spots we have left to fill.
         parents_length = len(parents)

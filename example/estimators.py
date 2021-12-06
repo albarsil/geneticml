@@ -1,7 +1,5 @@
 from sklearn.neural_network import MLPClassifier
 from geneticml.algorithms import BaseEstimator
-from typing import Callable
-from metrics import metric_accuracy
 
 
 class SklearnMLPEstimator(BaseEstimator):
@@ -17,7 +15,7 @@ class SklearnMLPEstimator(BaseEstimator):
         Parameters:
             parameters (dict): Possible model paremters
         """
-        super.__init__(MLPClassifier, parameters)
+        super().__init__(MLPClassifier, parameters)
 
     @property
     def parameters(self) -> dict:
@@ -40,7 +38,6 @@ class SklearnMLPEstimator(BaseEstimator):
 
         return self._model
 
-
     def fit(self, x, y) -> None:
         """
         Method that performs model training. The inheriting class must implement this method.
@@ -52,12 +49,11 @@ class SklearnMLPEstimator(BaseEstimator):
 
         self._model.fit(x, y)
 
-    def eval(self, x, y) -> None:
+    def predict(self, x, y) -> None:
         """
         Method that performs model inference. The inheriting class must implement this method.
 
         Parameters:
             x (?): The data set
-            y (?): The correct label set
         """
-        return self._model.predict(x, y)
+        return self._model.predict(x)
