@@ -1,0 +1,178 @@
+"""
+Class that holds a genetic algorithm for evolving a estimator.
+
+Credit:
+    A lot of those code was originally inspired by:
+    https://github.com/mrpeel/genetic-keras
+"""
+
+from abc import ABC
+from typing import List
+from functools import reduce
+from operator import add
+import random
+
+from geneticml.algorithms import BaseEstimator
+
+
+class BaseOptimizer(ABC):
+    def __init__(self) -> None:
+        pass
+
+
+class EvolutionaryOptimizer(BaseOptimizer):
+    """Class that implements genetic algorithm for MLP optimization."""
+
+    def __init__(self, parameters: dict, retain: float = 0.4, random_select: float = 0.1, mutate_chance: float = 0.2, max_children: int = 2) -> None:
+        """
+        Create an optimizer.
+
+        Parameters:
+            parameters (dict): Possible model paremters
+            retain (float): Percentage of population to retain after each generation
+            random_select (float): Probability of a rejected estimator remaining in the population
+            mutate_chance (float): Probability a estimator will be randomly mutated
+            max_children (int): The maximum size of babies that every family could have
+        """
+        super.__init__()
+        self.mutate_chance = mutate_chance
+        self.random_select = random_select
+        self.retain = retain
+        self._parameters = parameters
+        self._max_children = max_children
+
+    def create_random_set(self) -> dict:
+        """
+        Generate a random set of model parameters
+
+        Returns:
+            (dict): A new set of parameters
+        """
+        params = {}
+        for key in self._parameters:
+            params[key] = random.choice(self._parameters[key])
+        return params
+
+    def create_population(self, size: int) -> List[BaseEstimator]:
+        """
+        Create a population of random networks.
+
+        Parameters:
+            size (int): Number of networks to generate, aka the size of the population
+
+        Returns:
+            (list): Population of algorithms.BaseAlgorithm objects
+        """
+
+        return [BaseEstimator(**self.create_random_set()) for val in range(0, size)]
+
+    def grade(self, population: list) -> float:
+        """
+        Find average fitness for a population.
+
+        Parameters:
+            population (list): The population of networks
+
+        Returns:
+            (float): The average loss of the population
+        """
+        summed = reduce(add, (estimator.fitness for estimator in population))
+        return summed / float((len(population)))
+
+    def breed(self, mother: BaseEstimator, father: BaseEstimator) -> List[BaseEstimator]:
+        """
+        Make two children as parts of their parents.
+
+        Parameters:
+            mother (dict): The model parameters
+            father (dict): The model parameters
+
+        Returns:
+            (list): Two estimator objects
+        """
+
+        children = random.randint(1, self._max_children)
+
+        return [BaseEstimator(parameters={param: random.choice([mother.parameters[param], father.parameters[param]]) for param in self._parameters}) for _ in range(0, children)]
+
+    def mutate(self, parameters: dict) -> dict:
+        """
+        Randomly mutate one part of the parameters.
+
+        Parameters:
+            parameters (dict): The model parameters to mutate
+
+        Returns:
+            (dict): A randomly mutated parameters
+
+        """
+        # Choose a random key.
+        mutation = random.choice(list(self._parameters.keys()))
+
+        # Mutate one of the params.
+        parameters[mutation] = random.choice(self._parameters[mutation])
+
+        return parameters
+
+    def evolve(self, population: List[BaseEstimator]) -> List[BaseEstimator]:
+        """
+        Evolve a population of networks.
+
+        Parameters:
+            population (list): A list of estimator parameters
+
+        Returns:
+            (list): The evolved population of networks
+        """
+
+        # Get scores for each estimator.
+        graded = [(estimator.fitness, estimator) for estimator in population]
+
+        # Sort on the scores.
+        graded = [x[1] for x in sorted(graded, key=lambda x: x[0], reverse=False)]
+
+        # Get the number we want to keep for the next gen.
+        retain_length = int(len(graded) * self.retain)
+
+        # The parents are every estimator we want to keep.
+        parents = graded[:retain_length]
+
+        # For those we aren't keeping, randomly keep some anyway.
+        for individual in graded[retain_length:]:
+            if self.random_select > random.random():
+                parents.append(individual)
+
+        # Randomly mutate some of the networks we're keeping.
+        for individual in parents:
+            if self.mutate_chance > random.random():
+                individual = BaseEstimator(parameters=self.mutate(individual))
+
+        # Now find out how many spots we have left to fill.
+        parents_length = len(parents)
+        desired_length = len(population) - parents_length
+        children = []
+
+        # Add children, which are bred from two remaining networks.
+        while len(children) < desired_length:
+
+            # Get a random mom and dad.
+            male = random.randint(0, parents_length - 1)
+            female = random.randint(0, parents_length - 1)
+
+            # Assuming they aren't the same estimator...
+            if male != female:
+                male = parents[male]
+                female = parents[female]
+
+                # Breed them.
+                babies = self.breed(male, female)
+
+                # Add the children one at a time.
+                for baby in babies:
+                    # Don't grow larger than desired length.
+                    if len(children) < desired_length:
+                        children.append(baby)
+
+        parents.extend(children)
+
+        return parents
