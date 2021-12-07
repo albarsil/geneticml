@@ -162,6 +162,10 @@ Tests can be run with `python setup.py test` when the virtualenv is active.
 
 # Changelog
 
+1.0.3 - Included pytorch example
+
+1.0.2 - Minor fixes on naming
+
 1.0.1 - README fixes
 
 1.0.0 - First release
