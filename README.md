@@ -34,32 +34,34 @@ def fit(model, x, y):
 def predict(model, x):
     return model.predict(x)
 
-# Creates an estimator
-estimator = EstimatorBuilder().of(model_type=MLPClassifier).fit_with(func=fit).predict_with(func=predict).build()
+if __name__ == "__main__":
 
-# Defines a strategy for the optimization
-strategy = EvolutionaryStrategy(estimator_type=estimator, parameters=parameters, retain=0.4, random_select=0.1, mutate_chance=0.2, max_children=2)
+    # Creates an estimator
+    estimator = EstimatorBuilder().of(model_type=MLPClassifier).fit_with(func=fit).predict_with(func=predict).build()
 
-# Creates the optimizer
-optimizer = GeneticOptimizer(strategy=strategy)
+    # Defines a strategy for the optimization
+    strategy = EvolutionaryStrategy(estimator_type=estimator, parameters=parameters, retain=0.4, random_select=0.1, mutate_chance=0.2, max_children=2)
 
-# Loads the data
-data = load_iris()
+    # Creates the optimizer
+    optimizer = GeneticOptimizer(strategy=strategy)
 
-# Defines the metric
-metric = metric_accuracy
-greater_is_better = True
+    # Loads the data
+    data = load_iris()
 
-# Create the simulation using the optimizer and the strategy
-models = optimizer.simulate(
-    data=data.data, 
-    target=data.target,
-    generations=generations,
-    population=population,
-    evaluation_function=metric,
-    greater_is_better=greater_is_better,
-    verbose=True
-)
+    # Defines the metric
+    metric = metric_accuracy
+    greater_is_better = True
+
+    # Create the simulation using the optimizer and the strategy
+    models = optimizer.simulate(
+        data=data.data, 
+        target=data.target,
+        generations=generations,
+        population=population,
+        evaluation_function=metric,
+        greater_is_better=greater_is_better,
+        verbose=True
+    )
 ```
 
 The estimator is the way you define an algorithm or a class that will be used for model instantiation
