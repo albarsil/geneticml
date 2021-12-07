@@ -6,7 +6,7 @@ def readme():
 
 setup(
     name='geneticml',
-    version='1.0.0',
+    version='1.0.1',
     description='A simple and lightweight genetic algorithm for optimization of any machine learning model',
     long_description=readme(),
     long_description_content_type="text/markdown",
@@ -20,8 +20,8 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9'
     ],
-    keywords=[],
+    keywords=['machine learning', 'genetic', 'sklearn', 'pytorch', 'data science'],
     packages=find_packages(exclude=['tests.*', 'tests']),
-    install_requires=[],
+    install_requires=['tqdm'],
     test_suite='tests.test_suite'
 )
