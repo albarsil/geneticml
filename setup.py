@@ -7,7 +7,7 @@ def readme():
 setup(
     name='geneticml',
     version='1.0.0',
-    description='',
+    description='A simple and lightweight genetic algorithm for optimization of any machine learning model',
     long_description=readme(),
     long_description_content_type="text/markdown",
     url='https://github.com/albarsil/geneticml',
@@ -16,8 +16,6 @@ setup(
     license='MIT',
     classifiers=[
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9'

@@ -8,22 +8,22 @@ Credit:
 
 from typing import List, Callable, Type, TypeVar
 from tqdm import tqdm
-from geneticml.strategy import BaseOptimizer
+from geneticml.strategy import BaseStrategy
 from geneticml.algorithms import BaseEstimator
 
 T = TypeVar('T', bound=BaseEstimator)
-E = TypeVar('E', bound=BaseOptimizer)
+E = TypeVar('E', bound=BaseStrategy)
 
 
 class GeneticOptimizer:
-    def __init__(self, optimizer: Type[E]) -> None:
+    def __init__(self, strategy: Type[BaseStrategy]) -> None:
         """
         Create an optimizer.
 
         Parameters:
-            optimizer (BaseOptimizer): The optimizer used for the optimization
+            strategy (Type[BaseStrategy]): Any strategy that inherits from the type defined. This strategy will be used for the optimization
         """
-        self._optimizer = optimizer
+        self._strategy = strategy
 
     def simulate(self, data, target, generations: int, population: int, evaluation_function: Callable, greater_is_better: bool = False, verbose: bool = True) -> List[T]:
         """
@@ -40,7 +40,7 @@ class GeneticOptimizer:
             (List[BaseEstimator]): A list with the final population sorted by their loss
 
         """
-        estimators = self._optimizer.create_population(population)
+        estimators = self._strategy.create_population(population)
 
         if verbose:
             increment = 100 / generations
@@ -57,7 +57,7 @@ class GeneticOptimizer:
                 x.fit(data, target)
 
                 # Do the model inference
-                y_pred = x.predict(data, target)
+                y_pred = x.predict(data)
 
                 # Peform the evaluation
                 loss = evaluation_function(target, y_pred)
@@ -78,7 +78,7 @@ class GeneticOptimizer:
             # Evolve, except on the last iteration.
             if i != generations - 1:
                 # Do the evolution.
-                estimators = self._optimizer.evolve(estimators)
+                estimators = self._strategy.evolve(estimators)
         
             if verbose:
                 pbar.update(increment)
