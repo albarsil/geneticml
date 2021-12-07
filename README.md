@@ -16,7 +16,8 @@ pip install geneticml
 
 ## Usage
 
-This package provides a easy way to create estimators and perform the optimization with genetic algorithms
+This package provides a easy way to create estimators and perform the optimization with genetic algorithms. The example below describe in details how to create a simulation with genetic algorithms using evolutionary approach to train a `sklearn.neural_network.MLPClassifier`. A full list of examples could be found [here](https://github.com/albarsil/geneticml/tree/main/examples).
+
 
 ```python
 from geneticml.optimizers import GeneticOptimizer
@@ -36,11 +37,25 @@ def predict(model, x):
 
 if __name__ == "__main__":
 
+    seed = 11412
+
     # Creates an estimator
-    estimator = EstimatorBuilder().of(model_type=MLPClassifier).fit_with(func=fit).predict_with(func=predict).build()
+    estimator = EstimatorBuilder()\
+        .of(model_type=MLPClassifier)\
+        .fit_with(func=fit)\
+        .predict_with(func=predict)\
+        .build()
 
     # Defines a strategy for the optimization
-    strategy = EvolutionaryStrategy(estimator_type=estimator, parameters=parameters, retain=0.4, random_select=0.1, mutate_chance=0.2, max_children=2)
+    strategy = EvolutionaryStrategy(
+        estimator_type=estimator,
+        parameters=parameters,
+        retain=0.4,
+        random_select=0.1,
+        mutate_chance=0.2,
+        max_children=2,
+        random_state=seed
+    )
 
     # Creates the optimizer
     optimizer = GeneticOptimizer(strategy=strategy)

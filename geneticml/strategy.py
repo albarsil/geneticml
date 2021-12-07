@@ -38,7 +38,7 @@ class BaseStrategy(ABC):
 class EvolutionaryStrategy(BaseStrategy):
     """Class that implements genetic algorithm for MLP optimization."""
 
-    def __init__(self, estimator_type: Type[BaseEstimator], parameters: dict, retain: float = 0.4, random_select: float = 0.1, mutate_chance: float = 0.2, max_children: int = 2) -> None:
+    def __init__(self, estimator_type: Type[BaseEstimator], parameters: dict, retain: float = 0.4, random_select: float = 0.1, mutate_chance: float = 0.2, max_children: int = 2, random_state: int = 1231) -> None:
         """
         Create an optimizer.
 
@@ -49,6 +49,7 @@ class EvolutionaryStrategy(BaseStrategy):
             random_select (float): Probability of a rejected estimator remaining in the population
             mutate_chance (float): Probability a estimator will be randomly mutated
             max_children (int): The maximum size of babies that every family could have
+            random_state (int): The random state used as seed for the algorithms
         """
         super().__init__(estimator_type)
         self._estimator_type = estimator_type
@@ -57,6 +58,9 @@ class EvolutionaryStrategy(BaseStrategy):
         self.retain = retain
         self._parameters = parameters
         self._max_children = max_children
+        self._random_state = random_state
+
+        random.seed(self._random_state)
 
     def create_random_set(self) -> dict:
         """
@@ -65,6 +69,10 @@ class EvolutionaryStrategy(BaseStrategy):
         Returns:
             (dict): A new set of parameters
         """
+
+        # Define the seed
+        random.seed(self._random_state)
+
         params = {}
         for key in self._parameters:
             params[key] = random.choice(self._parameters[key])
@@ -96,21 +104,24 @@ class EvolutionaryStrategy(BaseStrategy):
         summed = reduce(add, (estimator.fitness for estimator in population))
         return summed / float((len(population)))
 
-    def breed(self, mother: T, father: T) -> List[T]:
+    def breed(self, parent1: T, parent2: T) -> List[T]:
         """
-        Make two children as parts of their parents.
+        Make children as parts of their parents.
 
         Parameters:
-            mother (dict): The model parameters
-            father (dict): The model parameters
+            parent1 (dict): The model parameters
+            parent2 (dict): The model parameters
 
         Returns:
-            (list): Two estimator objects
+            (List[BaseEstimator]): Estimator objects
         """
+
+        # Define the seed
+        random.seed(self._random_state)
 
         children = random.randint(1, self._max_children)
 
-        return [self._estimator_type.initialize(parameters={param: random.choice([mother.parameters[param], father.parameters[param]]) for param in self._parameters}) for _ in range(0, children)]
+        return [self._estimator_type.initialize(parameters={param: random.choice([parent1.parameters[param], parent2.parameters[param]]) for param in self._parameters}) for _ in range(0, children)]
 
     def mutate(self, parameters: dict) -> dict:
         """
@@ -123,6 +134,10 @@ class EvolutionaryStrategy(BaseStrategy):
             (dict): A randomly mutated parameters
 
         """
+
+        # Define the seed
+        random.seed(self._random_state)
+
         # Choose a random key.
         mutation = random.choice(list(self._parameters.keys()))
 
@@ -141,6 +156,9 @@ class EvolutionaryStrategy(BaseStrategy):
         Returns:
             (list): The evolved population of networks
         """
+
+        # Define the seed
+        random.seed(self._random_state)
 
         # Get scores for each estimator.
         graded = [(estimator.fitness, estimator) for estimator in population]
@@ -173,16 +191,16 @@ class EvolutionaryStrategy(BaseStrategy):
         while len(children) < desired_length:
 
             # Get a random mom and dad.
-            male = random.randint(0, parents_length - 1)
-            female = random.randint(0, parents_length - 1)
+            parent1 = random.randint(0, parents_length - 1)
+            parent2 = random.randint(0, parents_length - 1)
 
             # Assuming they aren't the same estimator...
-            if male != female:
-                male = parents[male]
-                female = parents[female]
+            if parent1 != parent2:
+                parent1 = parents[parent1]
+                parent2 = parents[parent2]
 
                 # Breed them.
-                babies = self.breed(male, female)
+                babies = self.breed(parent1, parent2)
 
                 # Add the children one at a time.
                 for baby in babies:
