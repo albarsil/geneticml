@@ -1,7 +1,4 @@
 
-import sys
-sys.path.append('../geneticml/')
-
 import warnings
 from geneticml.optimizers import GeneticOptimizer
 from geneticml.strategy import EvolutionaryStrategy
@@ -25,6 +22,7 @@ def predict(model, x):
 
 if __name__ == "__main__":
 
+    seed = 12542
     generations = 10  # Number of times to evole the population.
     population = 10  # Number of networks in each generation.
 
@@ -40,7 +38,7 @@ if __name__ == "__main__":
         "power_t": [0.5],
         "max_iter": [100, 20, 10, 50],
         "shuffle": [True, False],
-        "random_state": [None],
+        "random_state": [seed],
         "tol": [0.0001],
         "verbose": [False],
         "warm_start": [False],
@@ -56,10 +54,22 @@ if __name__ == "__main__":
     }
 
     # Creates an estimator
-    estimator = EstimatorBuilder().of(model_type=MLPClassifier).fit_with(func=fit).predict_with(func=predict).build()
+    estimator = EstimatorBuilder()\
+        .of(model_type=MLPClassifier)\
+        .fit_with(func=fit)\
+        .predict_with(func=predict)\
+        .build()
 
     # Defines a strategy for the optimization
-    strategy = EvolutionaryStrategy(estimator_type=estimator, parameters=parameters, retain=0.4, random_select=0.1, mutate_chance=0.2, max_children=2)
+    strategy = EvolutionaryStrategy(
+        estimator_type=estimator,
+        parameters=parameters,
+        retain=0.4,
+        random_select=0.1,
+        mutate_chance=0.2,
+        max_children=2,
+        random_state=seed
+    )
 
     # Creates the optimizer
     optimizer = GeneticOptimizer(strategy=strategy)
