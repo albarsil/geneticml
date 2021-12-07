@@ -4,8 +4,7 @@
 [![PyPI](https://img.shields.io/pypi/v/geneticml?color=g)](https://pypi.org/project/geneticml/)
 [![License](https://img.shields.io/badge/license-MIT-purple)](https://github.com/albarsil/geneticml/blob/master/LICENSE)
 
-This package contains a decorator for endpoints in flask and a way to validate dictionary/JSON elements. 
-It omits the need to validate the data yourself and allow its usage by other kinds of APIs like graphql through the `UniversalValidator`.
+This package contains a simple and lightweight genetic algorithm for optimization of any machine learning model.
 
 ## Installation
 
@@ -145,5 +144,7 @@ python setup.py install
 Tests can be run with `python setup.py test` when the virtualenv is active.
 
 # Changelog
+
+1.0.1 - README fixes
 
 1.0.0 - First release
