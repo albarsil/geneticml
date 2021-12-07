@@ -6,7 +6,7 @@ Credit:
     https://github.com/mrpeel/genetic-keras
 """
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import List, Type, TypeVar
 from functools import reduce
 from operator import add
@@ -17,8 +17,21 @@ T = TypeVar('T', bound=BaseEstimator)
 
 
 class BaseStrategy(ABC):
-    def __init__(self) -> None:
+    def __init__(self, estimator_type: Type[BaseEstimator]) -> None:
         super().__init__()
+        pass
+
+    @abstractmethod
+    def execute(self, population: List[Type[T]]) -> List[T]:
+        """
+        Execute the strategy on a population
+
+        Parameters:
+            population (list): A list of estimator parameters
+
+        Returns:
+            (list): The population
+        """
         pass
 
 
@@ -37,7 +50,7 @@ class EvolutionaryStrategy(BaseStrategy):
             mutate_chance (float): Probability a estimator will be randomly mutated
             max_children (int): The maximum size of babies that every family could have
         """
-        super().__init__()
+        super().__init__(estimator_type)
         self._estimator_type = estimator_type
         self.mutate_chance = mutate_chance
         self.random_select = random_select
@@ -118,7 +131,7 @@ class EvolutionaryStrategy(BaseStrategy):
 
         return parameters
 
-    def evolve(self, population: List[Type[T]]) -> List[T]:
+    def execute(self, population: List[Type[T]]) -> List[T]:
         """
         Evolve a population of networks.
 

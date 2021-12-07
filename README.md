@@ -1,0 +1,149 @@
+# geneticml
+
+[![Actions Status](https://github.com/albarsil/geneticml/workflows/Tests/badge.svg?branch=master)](https://github.com/albarsil/geneticml/actions/workflows/tests.yml)
+[![PyPI](https://img.shields.io/pypi/v/geneticml?color=g)](https://pypi.org/project/geneticml/)
+[![License](https://img.shields.io/badge/license-MIT-purple)](https://github.com/albarsil/geneticml/blob/master/LICENSE)
+
+This package contains a decorator for endpoints in flask and a way to validate dictionary/JSON elements. 
+It omits the need to validate the data yourself and allow its usage by other kinds of APIs like graphql through the `UniversalValidator`.
+
+## Installation
+
+Use pip to install the package from PyPI:
+
+```bash
+pip install geneticml
+```
+
+## Usage
+
+This package provides a easy way to create estimators and perform the optimization with genetic algorithms
+
+```python
+from geneticml.optimizers import GeneticOptimizer
+from geneticml.strategy import EvolutionaryStrategy
+from geneticml.algorithms import EstimatorBuilder
+from metrics import metric_accuracy
+from sklearn.neural_network import MLPClassifier
+from sklearn.datasets import load_iris
+
+# Creates a custom fit method
+def fit(model, x, y):
+    return model.fit(x, y)
+
+# Creates a custom predict method
+def predict(model, x):
+    return model.predict(x)
+
+# Creates an estimator
+estimator = EstimatorBuilder().of(model_type=MLPClassifier).fit_with(func=fit).predict_with(func=predict).build()
+
+# Defines a strategy for the optimization
+strategy = EvolutionaryStrategy(estimator_type=estimator, parameters=parameters, retain=0.4, random_select=0.1, mutate_chance=0.2, max_children=2)
+
+# Creates the optimizer
+optimizer = GeneticOptimizer(strategy=strategy)
+
+# Loads the data
+data = load_iris()
+
+# Defines the metric
+metric = metric_accuracy
+greater_is_better = True
+
+# Create the simulation using the optimizer and the strategy
+models = optimizer.simulate(
+    data=data.data, 
+    target=data.target,
+    generations=generations,
+    population=population,
+    evaluation_function=metric,
+    greater_is_better=greater_is_better,
+    verbose=True
+)
+```
+
+The estimator is the way you define an algorithm or a class that will be used for model instantiation
+
+```python
+estimator = EstimatorBuilder().of(model_type=MLPClassifier).fit_with(func=fit).predict_with(func=predict).build()
+```
+
+You need to speficy a custom fit and predict functions. These functions need to use the same signature than the below ones. This happens because the algorithm is generic and needs to know how to perform the fit and predict functions for the models.
+
+```python
+# Creates a custom fit method
+def fit(model, x, y):
+    return model.fit(x, y)
+
+# Creates a custom predict method
+def predict(model, x):
+    return model.predict(x)
+```
+
+## Custom strategy
+
+You can create custom strategies for the optimizers by extending the `geneticml.strategy.BaseStrategy` and implementing the `execute(...)` function.
+
+```python
+class MyCustomStrategy(BaseStrategy):
+    def __init__(self, estimator_type: Type[BaseEstimator]) -> None:
+        super().__init__(estimator_type)
+
+    def execute(self, population: List[Type[T]]) -> List[T]:
+        return population
+```
+
+The custom strategies will allow you to create optimization strategies to archive your goals. We currently have the evolutionary strategy but you can define your own :)
+
+## Custom optimizer
+
+You can create custom optimizers by extending the `geneticml.optimizers.BaseOptimizer` and implementing the `simulate(...)` function.
+
+```python
+class MyCustomOptimizer(BaseOptimizer):
+    def __init__(self, strategy: Type[BaseStrategy]) -> None:
+        super().__init__(strategy)
+
+    def simulate(self, data, target, verbose: bool = True) -> List[T]:
+        """
+        Generate a network with the genetic algorithm.
+
+        Parameters:
+            data (?): The data used to train the algorithm
+            target (?): The targets used to train the algorithm
+            verbose (bool): True if should verbose or False if not
+
+        Returns:
+            (List[BaseEstimator]): A list with the final population sorted by their loss
+        """
+        estimators = self._strategy.create_population()
+        for x in estimators:
+            x.fit(data, target)
+            y_pred = x.predict(target)
+        pass 
+```
+
+Custom optimizers will let you define how you want your algorithm to optimize the selected strategy. You can also combine custom strategies and optimizers to archive your desire objective.
+
+
+## Testing
+
+The following are the steps to create a virtual environment into a folder named "venv" and install the requirements.
+
+```bash
+# Create virtualenv
+python3 -m venv venv
+# activate virtualenv
+source venv/bin/activate
+# update packages
+pip install --upgrade pip setuptools wheel
+# install requirements
+python setup.py install
+```
+
+Tests can be run with `python setup.py test` when the virtualenv is active.
+
+# Changelog
+
+1.0.0 - First release
