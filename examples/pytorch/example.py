@@ -15,13 +15,13 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 def fit(model, x, y):
     #TODO some training processing
     # train(model, epochs, ....)
-    ......
+    # ......
     return model
 
 
 def predict(model, x):
     #TODO some processing over x to allow the inference through pytorch model
-    ......
+    # ......
     return model(x)
 
 
