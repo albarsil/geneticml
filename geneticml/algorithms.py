@@ -1,4 +1,3 @@
-from __future__ import annotations
 from typing import Callable
 
 
@@ -11,7 +10,7 @@ class EstimatorBuilder(object):
     
     """
 
-    def of(self, model_type) -> EstimatorBuilder:
+    def of(self, model_type) -> 'EstimatorBuilder':
         """
         Assign a model type for the estimator
 
@@ -25,7 +24,7 @@ class EstimatorBuilder(object):
         self._model_type = model_type
         return self
 
-    def fit_with(self, func: Callable) -> EstimatorBuilder:
+    def fit_with(self, func: Callable) -> 'EstimatorBuilder':
         """
         Define a function that will be used for the model training
 
@@ -39,7 +38,7 @@ class EstimatorBuilder(object):
         self._fit = func
         return self
 
-    def predict_with(self, func: Callable) -> EstimatorBuilder:
+    def predict_with(self, func: Callable) -> 'EstimatorBuilder':
         """
         Define a function that will be used for the model inference
 
