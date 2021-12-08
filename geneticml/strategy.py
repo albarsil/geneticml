@@ -186,13 +186,13 @@ class EvolutionaryStrategy(BaseStrategy):
         parents_length = len(parents)
         desired_length = len(population) - parents_length
         children = []
-
+        
         # Add children, which are bred from two remaining networks.
         while len(children) < desired_length:
 
             # Get a random mom and dad.
-            parent1 = random.randint(0, parents_length - 1)
-            parent2 = random.randint(0, parents_length - 1)
+            parent1 = 0 if parents_length == 0 else random.randint(0, parents_length - 1)
+            parent2 = 0 if parents_length == 0 else random.randint(0, parents_length - 1)
 
             # Assuming they aren't the same estimator...
             if parent1 != parent2:
