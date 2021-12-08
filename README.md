@@ -1,7 +1,7 @@
 # geneticml
 
 [![Actions Status](https://github.com/albarsil/geneticml/workflows/Tests/badge.svg?branch=main)](https://github.com/albarsil/geneticml/actions/workflows/tests.yml)
-[![CodeQL](https://github.com/albarsil/geneticml/workflows/CodeQL/badge.svgbranch=main)](https://github.com/albarsil/geneticml/actions?query=workflow%3ACodeQL)
+[![CodeQL](https://github.com/albarsil/geneticml/workflows/CodeQL/badge.svg?branch=main)](https://github.com/albarsil/geneticml/actions?query=workflow%3ACodeQL)
 [![PyPI](https://img.shields.io/pypi/v/geneticml?color=g)](https://pypi.org/project/geneticml/)
 [![License](https://img.shields.io/badge/license-MIT-purple)](https://github.com/albarsil/geneticml/blob/master/LICENSE)
 
