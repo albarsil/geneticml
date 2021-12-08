@@ -160,6 +160,15 @@ python setup.py install
 
 Tests can be run with `python setup.py test` when the virtualenv is active.
 
+# Contributing
+All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
+
+A detailed overview on how to contribute can be found in the contributing guide. There is also an overview on GitHub.
+
+If you are simply looking to start working with the geneticml codebase, navigate to the GitHub "issues" tab and start looking through interesting issues. Or maybe through using geneticml you have an idea of your own or are looking for something in the documentation and thinking ‘this can be improved’...you can do something about it!
+
+Feel free to ask questions on the mailing the contributors.
+
 # Changelog
 
 1.0.3 - Included pytorch example
