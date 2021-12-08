@@ -52,7 +52,7 @@ class EstimatorBuilder(object):
         self._predict = func
         return self
 
-    def build(self) -> BaseEstimator:
+    def build(self) -> 'BaseEstimator':
         """
         Creates an instance of BaseEstimator
 
@@ -87,7 +87,7 @@ class BaseEstimator(object):
         self._predict_func = predict_func
         self._fitness = -1
 
-    def initialize(self, parameters: dict) -> BaseEstimator:
+    def initialize(self, parameters: dict) -> 'BaseEstimator':
         """
         Create a class instance
 
