@@ -25,6 +25,7 @@ class SampleNeuralNetwork(nn.Module):
         self._n_classes = n_classes
         self._hidden_layers = hidden_size
 
+        # Define the middle of the neural network. You can use as many layers as you want
         if len(self._hidden_size) == 0:
             raise ValueError("hidden_size value should be greater than 0")
         elif len(self._hidden_size) > 1:
@@ -40,9 +41,9 @@ class SampleNeuralNetwork(nn.Module):
         else:
             self.fc = None
 
+        # Define the end of the neural network
         if dropout_prob is None:
             self.fc_out = nn.Sequential(nn.Linear(self._hidden_size[-1], n_classes))
-
         else:
             self.fc_out = nn.Sequential(
                 nn.Dropout(self._drop_prob),
@@ -52,9 +53,9 @@ class SampleNeuralNetwork(nn.Module):
     def forward(self, inputs):
 
         if self.fc is not None:
-            out = self.fc(inputs)
+            inputs = self.fc(inputs)
 
-        return torch.sigmoid(self.fc_out(out))
+        return torch.sigmoid(self.fc_out(inputs))
 
     def arch(self) -> dict:
         """
