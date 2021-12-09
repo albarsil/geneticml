@@ -29,11 +29,11 @@ if __name__ == "__main__":
     # Define a set of parameters that could be tested
     parameters = {
         "hidden_layer_sizes": [(10), (10, 10,)],
-        "activation": ["relu"],
-        "solver": ["adam"],
+        "activation": ["identity", "logistic", "tanh", "relu"],
+        "solver": ["lbfgs", "sgd", "adam"],
         "alpha": [0.0001, 0.01],
         "batch_size": ["auto"],
-        "learning_rate": ["constant"],
+        "learning_rate": ["constant", "invscaling", "adaptive",  "constant"],
         "learning_rate_init": [0.001, 0.1, 0.0001, 0.12, 0.112],
         "power_t": [0.5],
         "max_iter": [100, 20, 10, 50],
@@ -43,7 +43,7 @@ if __name__ == "__main__":
         "verbose": [False],
         "warm_start": [False],
         "momentum": [0.9, 1, 0.1, 0.88, 0.23],
-        "nesterovs_momentum": [True],
+        "nesterovs_momentum": [True, False],
         "early_stopping": [False, True],
         "validation_fraction": [0.1],
         "beta_1": [0.9],
