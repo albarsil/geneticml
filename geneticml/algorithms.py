@@ -1,6 +1,37 @@
 from typing import Callable
 
 
+class DataLoader(object):
+    """
+    Examples
+    --------
+
+    estimator = EstimatorBuilder.of(class).parameters(dict).fit_with(fit_func).predict_with(predict_func).build()
+    
+    """
+
+    def __init__(self, data, target) -> None:
+        """
+        Create a class instance
+
+        Parameters:
+            data (?): The X data
+            data (?): The target data
+        """
+        
+        self._data = data
+        self._target = target
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def target(self):
+        return self._target
+
+
+
 class EstimatorBuilder(object):
     """
     Examples

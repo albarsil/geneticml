@@ -6,11 +6,13 @@ Credit:
     https://github.com/mrpeel/genetic-keras
 """
 
-from typing import List, Callable, Type, TypeVar
 from abc import ABC, abstractmethod
+from typing import Callable, List, Type, TypeVar
+
 from tqdm import tqdm
+
+from geneticml.algorithms import BaseEstimator, DataLoader
 from geneticml.strategy import BaseStrategy
-from geneticml.algorithms import BaseEstimator
 
 T = TypeVar('T', bound=BaseEstimator)
 E = TypeVar('E', bound=BaseStrategy)
@@ -48,11 +50,13 @@ class GeneticOptimizer(BaseOptimizer):
         super().__init__(strategy)
         self._strategy = strategy
 
-    def simulate(self, data, target, generations: int, population: int, evaluation_function: Callable, greater_is_better: bool = False, verbose: bool = True) -> List[T]:
+    def simulate(self, train_data: DataLoader, test_data: DataLoader, generations: int, population: int, evaluation_function: Callable, greater_is_better: bool = False, verbose: bool = True, pbar=tqdm) -> List[T]:
         """
         Generate a network with the genetic algorithm.
 
         Parameters:
+            train_data (geneticml.algorithms.DataLoader): The train data loader
+            test_data (geneticml.algorithms.DataLoader): The test data loader
             generations (int): Number of times to evole the population
             population (int): Number of estimators in each generation
             evaluation_function (Callable): The function that will calculate the metric
@@ -67,7 +71,6 @@ class GeneticOptimizer(BaseOptimizer):
 
         if verbose:
             increment = 100 / generations
-            pbar = tqdm(total=100)
 
         # Evolve the generation.
         for i in range(generations):
@@ -77,13 +80,13 @@ class GeneticOptimizer(BaseOptimizer):
             for x in estimators:
 
                 # Train the model
-                x.fit(data, target)
+                x.fit(train_data.data, train_data.target)
 
                 # Do the model inference
-                y_pred = x.predict(data)
+                y_pred = x.predict(test_data.data)
 
                 # Peform the evaluation
-                loss = evaluation_function(target, y_pred)
+                loss = evaluation_function(test_data.target, y_pred)
 
                 # Workaround to make the lower losses better than the bigger ones
                 if greater_is_better:
