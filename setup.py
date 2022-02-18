@@ -1,4 +1,5 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+
 
 def readme():
     with open('README.md') as f:
@@ -6,7 +7,7 @@ def readme():
  
 setup(
     name='geneticml',
-    version='1.0.3',
+    version='1.0.4',
     description='A simple and lightweight genetic algorithm for optimization of any machine learning model',
     long_description=readme(),
     long_description_content_type="text/markdown",
