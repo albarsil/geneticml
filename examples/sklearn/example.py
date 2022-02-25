@@ -1,52 +1,59 @@
-
 import warnings
 
-import sklearn.metrics as metrics
-from geneticml.algorithms import DataLoader, EstimatorBuilder
+from geneticml.algorithms import (DataLoader, DefaultEstimatorMethods,
+                                  EstimatorBuilder)
 from geneticml.optimizers import GeneticOptimizer
 from geneticml.strategy import EvolutionaryStrategy, StrategyParameters
+
+import sklearn.metrics as metrics
 from sklearn.datasets import load_iris
 from sklearn.exceptions import ConvergenceWarning, UndefinedMetricWarning
-
-from model import SampleNeuralNetwork
+from sklearn.neural_network import MLPClassifier
 
 warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 
-def fit(model, x, y):
-    #TODO some training processing
-    # train(model, epochs, ....)
-    # ......
-    return model
-
-
-def predict(model, x):
-    #TODO some processing over x to allow the inference through pytorch model
-    # ......
-    return model(x)
-
-
 if __name__ == "__main__":
 
     seed = 12542
-    generations = 5  # Number of times to evole the population.
-    population = 2  # Number of networks in each generation.
+    generations = 10  # Number of times to evole the population.
+    population = 10  # Number of networks in each generation.
 
     # Define a set of parameters that could be tested
     parameters = StrategyParameters(
         model_parameters={
-            "n_classes": [4],
-            "hidden_size": [[4], [4, 4, 2], [4, 4, 4]],
-            "dropout_prob": [0.2, 0.11, 0.43, 0.55, 0.21, 0.1]
+            "hidden_layer_sizes": [(10), (10, 10,)],
+            "activation": ["identity", "logistic", "tanh", "relu"],
+            "solver": ["lbfgs", "sgd", "adam"],
+            "alpha": [0.0001, 0.01],
+            "batch_size": ["auto"],
+            "learning_rate": ["constant", "invscaling", "adaptive",  "constant"],
+            "learning_rate_init": [0.001, 0.1, 0.0001, 0.12, 0.112],
+            "power_t": [0.5],
+            "max_iter": [100, 20, 10, 50],
+            "shuffle": [True, False],
+            "random_state": [seed],
+            "tol": [0.0001],
+            "verbose": [False],
+            "warm_start": [False],
+            "momentum": [0.9, 1, 0.1, 0.88, 0.23],
+            "nesterovs_momentum": [True, False],
+            "early_stopping": [False, True],
+            "validation_fraction": [0.1],
+            "beta_1": [0.9],
+            "beta_2": [0.999],
+            "epsilon": [1e-08],
+            "n_iter_no_change": [10],
+            "max_fun": [15000],
         }
     )
 
     # Creates an estimator
     estimator = EstimatorBuilder()\
-        .of(model_type=SampleNeuralNetwork)\
-        .fit_with(func=fit)\
-        .predict_with(func=predict)\
+        .of(model_type=MLPClassifier)\
+        .fit_with(DefaultEstimatorMethods.fit)\
+        .predict_with(DefaultEstimatorMethods.predict)\
         .build()
 
     # Defines a strategy for the optimization

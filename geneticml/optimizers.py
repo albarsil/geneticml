@@ -24,13 +24,13 @@ class BaseOptimizer(ABC):
         pass
 
     @abstractmethod
-    def simulate(self, data, target, verbose: bool = True) -> List[T]:
+    def simulate(self, train_data: DataLoader, test_data: DataLoader = None, verbose: bool = True) -> List[T]:
         """
         Generate a network with the genetic algorithm.
 
         Parameters:
-            data (?): The data used to train the algorithm
-            target (?): The targets used to train the algorithm
+            train_data (geneticml.algorithms.DataLoader): The train data loader
+            test_data (geneticml.algorithms.DataLoader): The test data loader
             verbose (bool): True if should verbose or False if not
 
         Returns:
@@ -50,7 +50,7 @@ class GeneticOptimizer(BaseOptimizer):
         super().__init__(strategy)
         self._strategy = strategy
 
-    def simulate(self, train_data: DataLoader, test_data: DataLoader, generations: int, population: int, evaluation_function: Callable, greater_is_better: bool = False, verbose: bool = True, pbar=tqdm) -> List[T]:
+    def simulate(self, train_data: DataLoader, generations: int, population: int, evaluation_function: Callable, test_data: DataLoader = None, greater_is_better: bool = False, verbose: bool = True, pbar: tqdm = None) -> List[T]:
         """
         Generate a network with the genetic algorithm.
 
@@ -60,6 +60,7 @@ class GeneticOptimizer(BaseOptimizer):
             generations (int): Number of times to evole the population
             population (int): Number of estimators in each generation
             evaluation_function (Callable): The function that will calculate the metric
+            sampling_fuction (geneticml.algorithms.DefaultDataSampler): A function used to up/down sampling the trainset
             greater_is_better (bool) Whether evaluation_function is a score function (default), meaning high is good, or a loss function, meaning low is good. In the latter case, the scorer object will sign-flip the outcome of the evaluation_function.
             verbose (bool): True if should verbose or False if not
 
@@ -71,6 +72,10 @@ class GeneticOptimizer(BaseOptimizer):
 
         if verbose:
             increment = 100 / generations
+            pbar = pbar if pbar else tqdm(total=100)
+
+        if test_data is None:
+            test_data = train_data
 
         # Evolve the generation.
         for i in range(generations):
@@ -78,6 +83,13 @@ class GeneticOptimizer(BaseOptimizer):
             # Train and get loss for networks.
             losses = []
             for x in estimators:
+
+                # Do the data balancing if the estimator have it
+                if x.has_data_balancing:
+                    print(len(train_data.data))
+                    xtrain, ytrain = x.data_balance(data=train_data.data, target=train_data.target)
+                    train_data = DataLoader(data=xtrain, target=ytrain)
+                    print(len(train_data.data))
 
                 # Train the model
                 x.fit(train_data.data, train_data.target)
