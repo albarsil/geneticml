@@ -1,12 +1,14 @@
 
 import warnings
+
+import sklearn.metrics as metrics
+from geneticml.algorithms import DataLoader, EstimatorBuilder
 from geneticml.optimizers import GeneticOptimizer
-from geneticml.strategy import EvolutionaryStrategy
-from geneticml.algorithms import EstimatorBuilder
-from metrics import metric_accuracy
-from model import SampleNeuralNetwork
+from geneticml.strategy import EvolutionaryStrategy, StrategyParameters
 from sklearn.datasets import load_iris
-from sklearn.exceptions import UndefinedMetricWarning, ConvergenceWarning
+from sklearn.exceptions import ConvergenceWarning, UndefinedMetricWarning
+
+from model import SampleNeuralNetwork
 
 warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
@@ -32,11 +34,13 @@ if __name__ == "__main__":
     population = 2  # Number of networks in each generation.
 
     # Define a set of parameters that could be tested
-    parameters = {
-        "n_classes": [4],
-        "hidden_size": [[4], [4, 4, 2], [4, 4, 4]],
-        "dropout_prob": [0.2, 0.11, 0.43, 0.55, 0.21, 0.1]
-    }
+    parameters = StrategyParameters(
+        model_parameters={
+            "n_classes": [4],
+            "hidden_size": [[4], [4, 4, 2], [4, 4, 4]],
+            "dropout_prob": [0.2, 0.11, 0.43, 0.55, 0.21, 0.1]
+        }
+    )
 
     # Creates an estimator
     estimator = EstimatorBuilder()\
@@ -47,7 +51,7 @@ if __name__ == "__main__":
 
     # Defines a strategy for the optimization
     strategy = EvolutionaryStrategy(
-        estimator_type=estimator,
+        estimator=estimator,
         parameters=parameters,
         retain=0.4,
         random_select=0.1,
@@ -68,8 +72,7 @@ if __name__ == "__main__":
 
     # Create the simulation using the optimizer and the strategy
     models = optimizer.simulate(
-        data=data.data, 
-        target=data.target,
+        train_data=DataLoader(data=data.data, target=data.target),
         generations=generations,
         population=population,
         evaluation_function=metric,

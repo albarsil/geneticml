@@ -50,7 +50,7 @@ class GeneticOptimizer(BaseOptimizer):
         super().__init__(strategy)
         self._strategy = strategy
 
-    def simulate(self, train_data: DataLoader, generations: int, population: int, evaluation_function: Callable, test_data: DataLoader = None, greater_is_better: bool = False, verbose: bool = True, pbar=tqdm) -> List[T]:
+    def simulate(self, train_data: DataLoader, generations: int, population: int, evaluation_function: Callable, test_data: DataLoader = None, greater_is_better: bool = False, verbose: bool = True, pbar: tqdm = None) -> List[T]:
         """
         Generate a network with the genetic algorithm.
 
@@ -72,6 +72,7 @@ class GeneticOptimizer(BaseOptimizer):
 
         if verbose:
             increment = 100 / generations
+            pbar = pbar if pbar else tqdm(total=100)
 
         if test_data is None:
             test_data = train_data
@@ -85,8 +86,10 @@ class GeneticOptimizer(BaseOptimizer):
 
                 # Do the data balancing if the estimator have it
                 if x.has_data_balancing:
+                    print(len(train_data.data))
                     xtrain, ytrain = x.data_balance(data=train_data.data, target=train_data.target)
                     train_data = DataLoader(data=xtrain, target=ytrain)
+                    print(len(train_data.data))
 
                 # Train the model
                 x.fit(train_data.data, train_data.target)

@@ -1,12 +1,14 @@
 
+
 import warnings
 
-from geneticml.algorithms import (DataLoader, DefaultEstimator,
-                                  DefaultEstimatorMethods, EstimatorBuilder)
+from geneticml.algorithms import (DataLoader, DefaultEstimatorMethods,
+                                  EstimatorBuilder)
 from geneticml.optimizers import GeneticOptimizer
 from geneticml.strategy import EvolutionaryStrategy, StrategyParameters
 from imblearn.over_sampling import SMOTE
-from metrics import metric_accuracy
+
+import sklearn.metrics as metrics
 from sklearn.datasets import load_iris
 from sklearn.exceptions import ConvergenceWarning, UndefinedMetricWarning
 from sklearn.model_selection import train_test_split
@@ -14,6 +16,7 @@ from sklearn.neural_network import MLPClassifier
 
 warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
+
 
 
 if __name__ == "__main__":
@@ -50,11 +53,9 @@ if __name__ == "__main__":
             "max_fun": [15000],
         },
         data_balancing_parameters={
-            "random_state": seed,
-            "ratio": ['auto'],
-            "k_neighbors": [5,10,15,20,50],
-            "m_neighbors": [5, 10, 15, 20, 50],
-            "kind": ['regular', 'borderline1', 'borderline2', 'svm']
+            "random_state": [seed],
+            "k_neighbors": [5, 10, 15, 20, 50],
+            "sampling_strategy": [{0:36, 1:100}]
         }
     )
 
@@ -63,6 +64,8 @@ if __name__ == "__main__":
         .of(model_type=MLPClassifier)\
         .data_balance_algorithm(SMOTE)\
         .data_balance_with(DefaultEstimatorMethods.data_balance)\
+        .fit_with(DefaultEstimatorMethods.fit)\
+        .predict_with(DefaultEstimatorMethods.predict)\
         .build()
 
     # Defines a strategy for the optimization
@@ -83,7 +86,6 @@ if __name__ == "__main__":
     data = load_iris()
 
     # Defines the metric
-    metric = metric_accuracy
     greater_is_better = True
 
     x_train, x_test, y_train, y_test = train_test_split(data.data, data.target, test_size=0.3, shuffle=True, random_state=seed)
@@ -94,7 +96,7 @@ if __name__ == "__main__":
         test_data=DataLoader(data=x_test, target=y_test),
         generations=generations,
         population=population,
-        evaluation_function=metric,
+        evaluation_function=metrics.accuracy_score,
         greater_is_better=greater_is_better,
         verbose=True
     )

@@ -134,6 +134,7 @@ class EstimatorBuilder(object):
         """
 
         self._model_type = model_type
+        self._data_balance_model_type = None
         self._data_balance = None
         return self
     
@@ -221,10 +222,11 @@ class BaseEstimator(object):
             balance_func (Callable): A data balancing function used for train data balancing
         """
         
-        self.parameters = None
+        self._parameters = None
         self._model = None
         self._model_type = model_type
-        self._data_balance_algorithm = data_balance_model_type
+        self._data_balance_model = None
+        self._data_balance_model_type = data_balance_model_type
         self._fit_func = fit_func
         self._predict_func = predict_func
         self._balance_func = balance_func
@@ -245,7 +247,7 @@ class BaseEstimator(object):
         self._model = self._model_type(**parameters.model_parameters)
 
         if self._parameters.data_balancing_parameters is not None:
-            self._data_balance_algorithm = self._data_balance_algorithm(**parameters.data_balancing_parameters)
+            self._data_balance_model = self._data_balance_model_type(**parameters.data_balancing_parameters)
         
         return self
 
@@ -257,7 +259,7 @@ class BaseEstimator(object):
         Returns:
             (dict): The model parameters
         """
-        return self._parameters.data_balancing_parameters is not None
+        return self._data_balance_model is not None
 
     @property
     def model_type(self):
@@ -348,7 +350,7 @@ class BaseEstimator(object):
         Returns:
             (tuple): A tuple containing the balanced data and targets
         """
-        if self._data_balance_algorithm is None:
+        if self._data_balance_model is None:
             raise ValueError('A data_balance_type was not specified on the estimator __init__ function')
         else:
-            return self._balance_func(self._data_balance_algorithm, data, target)
+            return self._balance_func(self._data_balance_model, data, target)

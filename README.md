@@ -21,20 +21,13 @@ This package provides a easy way to create estimators and perform the optimizati
 
 
 ```python
+from geneticml.algorithms import (DataLoader, DefaultEstimatorMethods,EstimatorBuilder)
 from geneticml.optimizers import GeneticOptimizer
-from geneticml.strategy import EvolutionaryStrategy
-from geneticml.algorithms import EstimatorBuilder
-from metrics import metric_accuracy
-from sklearn.neural_network import MLPClassifier
+from geneticml.strategy import EvolutionaryStrategy, StrategyParameters
+import sklearn.metrics as metrics
 from sklearn.datasets import load_iris
-
-# Creates a custom fit method
-def fit(model, x, y):
-    return model.fit(x, y)
-
-# Creates a custom predict method
-def predict(model, x):
-    return model.predict(x)
+from sklearn.exceptions import ConvergenceWarning, UndefinedMetricWarning
+from sklearn.neural_network import MLPClassifier
 
 if __name__ == "__main__":
 
@@ -43,13 +36,13 @@ if __name__ == "__main__":
     # Creates an estimator
     estimator = EstimatorBuilder()\
         .of(model_type=MLPClassifier)\
-        .fit_with(func=fit)\
-        .predict_with(func=predict)\
+        .fit_with(DefaultEstimatorMethods.fit)\
+        .predict_with(DefaultEstimatorMethods.predict)\
         .build()
 
     # Defines a strategy for the optimization
     strategy = EvolutionaryStrategy(
-        estimator_type=estimator,
+        estimatort=estimator,
         parameters=parameters,
         retain=0.4,
         random_select=0.1,
@@ -65,16 +58,14 @@ if __name__ == "__main__":
     data = load_iris()
 
     # Defines the metric
-    metric = metric_accuracy
     greater_is_better = True
 
     # Create the simulation using the optimizer and the strategy
     models = optimizer.simulate(
-        data=data.data, 
-        target=data.target,
+        train_data=DataLoader(data=data.data, target=data.target),
         generations=generations,
         population=population,
-        evaluation_function=metric,
+        evaluation_function=metrics.accuracy_score,
         greater_is_better=greater_is_better,
         verbose=True
     )
@@ -86,7 +77,7 @@ The estimator is the way you define an algorithm or a class that will be used fo
 estimator = EstimatorBuilder().of(model_type=MLPClassifier).fit_with(func=fit).predict_with(func=predict).build()
 ```
 
-You need to speficy a custom fit and predict functions. These functions need to use the same signature than the below ones. This happens because the algorithm is generic and needs to know how to perform the fit and predict functions for the models.
+You can use the default functions provided by the `geneticml.algorithms.DefaultEstimatorMethods` or you can speficy your own functions to perform the operations. If you want to create your own, please note that these functions need to use the same signature than the below ones. This happens because the algorithm is generic and needs to know how to perform the fit and predict functions for the models.
 
 ```python
 # Creates a custom fit method
@@ -169,13 +160,3 @@ A detailed overview on how to contribute can be found in the contributing guide.
 If you are simply looking to start working with the geneticml codebase, navigate to the GitHub "issues" tab and start looking through interesting issues. Or maybe through using geneticml you have an idea of your own or are looking for something in the documentation and thinking ‘this can be improved’...you can do something about it!
 
 Feel free to ask questions on the mailing the contributors.
-
-# Changelog
-
-1.0.3 - Included pytorch example
-
-1.0.2 - Minor fixes on naming
-
-1.0.1 - README fixes
-
-1.0.0 - First release
