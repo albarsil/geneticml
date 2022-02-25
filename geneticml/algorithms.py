@@ -1,7 +1,5 @@
 from typing import Callable, Tuple
 
-from pytest import param
-
 
 class DataLoader(object):
     """
