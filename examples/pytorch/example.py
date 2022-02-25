@@ -67,7 +67,6 @@ if __name__ == "__main__":
     data = load_iris()
 
     # Defines the metric
-    metric = metric_accuracy
     greater_is_better = True
 
     # Create the simulation using the optimizer and the strategy
@@ -75,7 +74,7 @@ if __name__ == "__main__":
         train_data=DataLoader(data=data.data, target=data.target),
         generations=generations,
         population=population,
-        evaluation_function=metric,
+        evaluation_function=metrics.accuracy_score,
         greater_is_better=greater_is_better,
         verbose=True
     )
