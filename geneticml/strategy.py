@@ -6,11 +6,12 @@ Credit:
     https://github.com/mrpeel/genetic-keras
 """
 
+import random
 from abc import ABC, abstractmethod
-from typing import List, Type, TypeVar
 from functools import reduce
 from operator import add
-import random
+from typing import List, Type, TypeVar
+
 from geneticml.algorithms import BaseEstimator
 
 T = TypeVar('T', bound=BaseEstimator)
@@ -33,7 +34,6 @@ class BaseStrategy(ABC):
             (list): The population
         """
         pass
-
 
 class EvolutionaryStrategy(BaseStrategy):
     """Class that implements genetic algorithm for MLP optimization."""

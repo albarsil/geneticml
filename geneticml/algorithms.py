@@ -30,7 +30,15 @@ class DataLoader(object):
     def target(self):
         return self._target
 
+class DefaultEstimator(object):
 
+    @staticmethod
+    def fit(model, x, y):
+        return model.fit(x, y)
+
+    @staticmethod
+    def predict(model, x):
+        return model.predict(x)
 
 class EstimatorBuilder(object):
     """
@@ -55,7 +63,7 @@ class EstimatorBuilder(object):
         self._model_type = model_type
         return self
 
-    def fit_with(self, func: Callable) -> 'EstimatorBuilder':
+    def fit_with(self, func: Callable = DefaultEstimator.fit) -> 'EstimatorBuilder':
         """
         Define a function that will be used for the model training
 
@@ -69,7 +77,7 @@ class EstimatorBuilder(object):
         self._fit = func
         return self
 
-    def predict_with(self, func: Callable) -> 'EstimatorBuilder':
+    def predict_with(self, func: Callable = DefaultEstimator.predict) -> 'EstimatorBuilder':
         """
         Define a function that will be used for the model inference
 
@@ -91,8 +99,7 @@ class EstimatorBuilder(object):
             (BaseEstimator): An instance of BaseEstimator that will be used for the optimization
         """
 
-        return BaseEstimator(model_type=self._model_type, fit_func=self._fit, predict_func=self._predict)
-
+        return BaseEstimator(model_type=self._model_type, fit_func=self._fit, predict_func=self._predict, balance_with=self._databalance)
 
 class BaseEstimator(object):
 
@@ -100,15 +107,17 @@ class BaseEstimator(object):
     A base class to be used for model optimization
     """
 
-    def __init__(self, model_type, fit_func: Callable, predict_func: Callable) -> None:
+    def __init__(self, model_type, fit_func: Callable, predict_func: Callable):
         """
         Create a class instance
 
         Parameters:
             model_type (?): A model type
             parameters (dict): Possible model parameters
+            preproc_func (Callable): A preprocessing function used to process the data
             fit_func (Callable): A fit function used for model training
             predict_func (Callable): A predict function used for model inference
+            balance_with (Callable): A data balancing function used for train data balancing
         """
         
         self._parameters = None
@@ -128,8 +137,8 @@ class BaseEstimator(object):
             (BaseEstimator): The current object with the model initialized
         """
 
+        self._model = self._model_type(**parameters)
         self._parameters = parameters
-        self._model = self._model_type(**self._parameters)
         return self
 
     @property

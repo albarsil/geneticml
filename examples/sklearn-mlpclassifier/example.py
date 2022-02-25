@@ -1,23 +1,16 @@
 
 import warnings
+
+from geneticml.algorithms import DataLoader, DefaultEstimator, EstimatorBuilder
 from geneticml.optimizers import GeneticOptimizer
 from geneticml.strategy import EvolutionaryStrategy
-from geneticml.algorithms import EstimatorBuilder
 from metrics import metric_accuracy
-from sklearn.neural_network import MLPClassifier
 from sklearn.datasets import load_iris
-from sklearn.exceptions import UndefinedMetricWarning, ConvergenceWarning
+from sklearn.exceptions import ConvergenceWarning, UndefinedMetricWarning
+from sklearn.neural_network import MLPClassifier
 
 warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
-
-
-def fit(model, x, y):
-    return model.fit(x, y)
-
-
-def predict(model, x):
-    return model.predict(x)
 
 
 if __name__ == "__main__":
@@ -56,8 +49,8 @@ if __name__ == "__main__":
     # Creates an estimator
     estimator = EstimatorBuilder()\
         .of(model_type=MLPClassifier)\
-        .fit_with(func=fit)\
-        .predict_with(func=predict)\
+        .fit_with(func=DefaultEstimator.fit)\
+        .predict_with(func=DefaultEstimator.predict)\
         .build()
 
     # Defines a strategy for the optimization
@@ -83,8 +76,7 @@ if __name__ == "__main__":
 
     # Create the simulation using the optimizer and the strategy
     models = optimizer.simulate(
-        data=data.data, 
-        target=data.target,
+        train_data=DataLoader(data=data.data, target=data.target),
         generations=generations,
         population=population,
         evaluation_function=metric,
