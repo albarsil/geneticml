@@ -1,13 +1,9 @@
-from typing import Callable
+from typing import Callable, Tuple
 
 
 class DataLoader(object):
     """
-    Examples
-    --------
-
-    estimator = EstimatorBuilder.of(class).parameters(dict).fit_with(fit_func).predict_with(predict_func).build()
-    
+    A data loader object to create an abstraction for data points and targets
     """
 
     def __init__(self, data, target) -> None:
@@ -31,14 +27,53 @@ class DataLoader(object):
         return self._target
 
 class DefaultEstimator(object):
+    """
+    A class with static methods and most common options to fill the estimators
+    """
 
     @staticmethod
-    def fit(model, x, y):
-        return model.fit(x, y)
+    def fit(model, data, target):
+        """
+        A simple fit function
+
+        Parameters:
+            model (?): A model instance
+            data (?): The data that will be used to fit the algorithm
+            target (?): The target that will be used to fit the algorithm
+
+        Returns:
+            (?): The model fitted
+        """
+        return model.fit(data, target)
 
     @staticmethod
-    def predict(model, x):
-        return model.predict(x)
+    def predict(model, data):
+        """
+        A simple predict function
+
+        Parameters:
+            model (?): A model instance
+            data (?): The data that will be used for predict
+
+        Returns:
+            (?): The model prediction
+        """
+        return model.predict(data)
+
+    @staticmethod
+    def data_balance(data, target, parameters) -> Tuple:
+        """
+        A simple fit function
+
+        Parameters:
+            data (?): The data that will be used to fit the algorithm
+            target (?): The target that will be used to fit the algorithm
+            parameters (?): The parameters used for data balancing
+
+        Returns:
+            (tuple): A tuple containing the balanced data and targets
+        """
+        return (data, target)
 
 class EstimatorBuilder(object):
     """
@@ -61,6 +96,7 @@ class EstimatorBuilder(object):
         """
 
         self._model_type = model_type
+        self._data_balance = None
         return self
 
     def fit_with(self, func: Callable = DefaultEstimator.fit) -> 'EstimatorBuilder':
@@ -91,6 +127,20 @@ class EstimatorBuilder(object):
         self._predict = func
         return self
 
+    def balance_with(self, func: Callable) -> 'EstimatorBuilder':
+        """
+        Define a function that will be used for the model inference
+
+        Parameters:
+            func (Callable): A predict function used for model inference
+
+        Returns:
+            (EstimatorBuilder): The current object
+        """
+
+        self._data_balance = func
+        return self
+
     def build(self) -> 'BaseEstimator':
         """
         Creates an instance of BaseEstimator
@@ -99,7 +149,10 @@ class EstimatorBuilder(object):
             (BaseEstimator): An instance of BaseEstimator that will be used for the optimization
         """
 
-        return BaseEstimator(model_type=self._model_type, fit_func=self._fit, predict_func=self._predict, balance_with=self._databalance)
+        if self._data_balance is None:
+            return BaseEstimator(model_type=self._model_type, fit_func=self._fit, predict_func=self._predict)
+        else:
+            return BalancedEstimator(model_type=self._model_type, fit_func=self._fit, predict_func=self._predict, balance_func=self._data_balance)
 
 class BaseEstimator(object):
 
@@ -113,32 +166,29 @@ class BaseEstimator(object):
 
         Parameters:
             model_type (?): A model type
-            parameters (dict): Possible model parameters
-            preproc_func (Callable): A preprocessing function used to process the data
             fit_func (Callable): A fit function used for model training
             predict_func (Callable): A predict function used for model inference
-            balance_with (Callable): A data balancing function used for train data balancing
         """
         
-        self._parameters = None
+        self._model_parameters = None
         self._model = None
         self._model_type = model_type
         self._fit_func = fit_func
         self._predict_func = predict_func
         self._fitness = -1
 
-    def initialize(self, parameters: dict) -> 'BaseEstimator':
+    def initialize(self, model_parameters: dict) -> 'BaseEstimator':
         """
         Create a class instance
 
         Parameters:
-            parameters (dict): Possible model parameters
+            model_parameters (dict): Possible model parameters
         Returns:
             (BaseEstimator): The current object with the model initialized
         """
 
-        self._model = self._model_type(**parameters)
-        self._parameters = parameters
+        self._model = self._model_type(**model_parameters)
+        self._model_parameters = model_parameters
         return self
 
     @property
@@ -146,14 +196,14 @@ class BaseEstimator(object):
         self._model_type
 
     @property
-    def parameters(self) -> dict:
+    def model_parameters(self) -> dict:
         """
         Property to access the base model parameters
 
         Returns:
-            (dict): The parameters
+            (dict): The model parameters
         """
-        return self._parameters
+        return self._model_parameters
 
     @property
     def model(self):
@@ -208,3 +258,53 @@ class BaseEstimator(object):
             (list): The predict output
         """
         return self._predict_func(self._model, x)
+
+class BalancedEstimator(BaseEstimator):
+    """
+    An instance that will be balanced during model optimization
+    """
+
+    def __init__(self, model_type, fit_func: Callable, predict_func: Callable, balance_func: Callable):
+        """
+        Create a class instance
+
+        Parameters:
+            model_type (?): A model type
+            fit_func (Callable): A fit function used for model training
+            predict_func (Callable): A predict function used for model inference
+            balance_func (Callable): A data balancing function used for train data balancing
+        """
+
+        super().__init__(model_type, fit_func, predict_func)
+        self._balance_func = balance_func
+        self._balance_parameters = None
+
+
+    def initialize(self, model_parameters: dict, balance_parameters: dict) -> 'BalancedEstimator':
+        """
+        Create a class instance
+
+        Parameters:
+            model_parameters (dict): Possible model parameters
+            balance_parameters (dict): Possible data balancing parameters
+        Returns:
+            (BalancedEstimator): The current object with the model initialized
+        """
+
+        super().initialize(model_parameters)
+
+        self._balance_parameters = balance_parameters
+        return self
+
+    def data_balance(self, data, target) -> Tuple:
+        """
+        Create a class instance
+
+        Parameters:
+            data (?): The data that will be used to fit the algorithm
+            target (?): The target that will be used to fit the algorithm
+        Returns:
+            (tuple): A tuple containing the balanced data and targets
+        """
+
+        return self._balance_func(data, target, self._balance_parameters)
