@@ -12,7 +12,7 @@ from functools import reduce
 from operator import add
 from typing import List, Type, TypeVar
 
-from geneticml.algorithms import BaseEstimator
+from geneticml.algorithms import BaseEstimator, EstimatorParameters
 
 T = TypeVar('T', bound=BaseEstimator)
 
@@ -35,24 +35,61 @@ class BaseStrategy(ABC):
         """
         pass
 
+class StrategyParameters(object):
+    """
+    A class to wrap the strategy parameters
+    """
+
+    def __init__(self, model_parameters: dict, data_balancing_parameters: dict = None):
+        """
+        Create a class instance
+
+        Parameters:
+            model_parameters (?): The model parameters
+            data_balancing_parameters (?): The data balancing parameters
+        """
+        self._model_parameters = model_parameters
+        self._data_balancing_parameters = data_balancing_parameters
+        self._balancing_key = 'DATA_BALACING'
+
+    @property
+    def model_parameters(self) -> dict:
+        """
+        Property to get the model parameters
+
+        Returns:
+            (dict): The model parameters
+        """
+        return self._model_parameters
+
+    @property
+    def data_balancing_parameters(self) -> dict:
+        """
+        Property to get the data balancing parameters
+
+        Returns:
+            (dict): The data balancing parameters
+        """
+        return self._data_balancing_parameters
+
 class EvolutionaryStrategy(BaseStrategy):
     """Class that implements genetic algorithm for MLP optimization."""
 
-    def __init__(self, estimator_type: Type[BaseEstimator], parameters: dict, retain: float = 0.4, random_select: float = 0.1, mutate_chance: float = 0.2, max_children: int = 2, random_state: int = 1231) -> None:
+    def __init__(self, estimator: Type[BaseEstimator], parameters: StrategyParameters, retain: float = 0.4, random_select: float = 0.1, mutate_chance: float = 0.2, max_children: int = 2, random_state: int = 1231) -> None:
         """
         Create an optimizer.
 
         Parameters:
-            estimator_type (Type[BaseEstimator]): Any instance that inherits from the type defined
-            parameters (dict): Possible model paremters
+            estimator (Type[BaseEstimator]): Any instance that inherits from the type defined
+            parameters (strategy.StrategyParameters): Possible model paremters
             retain (float): Percentage of population to retain after each generation
             random_select (float): Probability of a rejected estimator remaining in the population
             mutate_chance (float): Probability a estimator will be randomly mutated
             max_children (int): The maximum size of babies that every family could have
             random_state (int): The random state used as seed for the algorithms
         """
-        super().__init__(estimator_type)
-        self._estimator_type = estimator_type
+        super().__init__(estimator)
+        self._estimator = estimator
         self.mutate_chance = mutate_chance
         self.random_select = random_select
         self.retain = retain
@@ -62,20 +99,27 @@ class EvolutionaryStrategy(BaseStrategy):
 
         random.seed(self._random_state)
 
-    def create_random_set(self) -> dict:
+    def create_random_set(self) -> EstimatorParameters:
         """
         Generate a random set of model parameters
 
         Returns:
-            (dict): A new set of parameters
+            (EstimatorParameters): An EstimatorParameters set of parameters
         """
 
         # Define the seed
         random.seed(self._random_state)
 
-        params = {}
-        for key in self._parameters:
-            params[key] = random.choice(self._parameters[key])
+        if self._parameters.data_balancing_parameters is None:
+            balance_params = None
+        else:
+            balance_params = {key:random.choice(self._parameters.data_balancing_parameters[key]) for key in self._parameters.data_balancing_parameters} 
+
+        params = EstimatorParameters(
+            model_parameters={key:random.choice(self._parameters.model_parameters[key]) for key in self._parameters.model_parameters},
+            data_balancing_parameters=balance_params
+        )
+
         return params
 
     def create_population(self, size: int) -> List[T]:
@@ -89,7 +133,7 @@ class EvolutionaryStrategy(BaseStrategy):
             (list): Population of algorithms.BaseAlgorithm objects
         """
 
-        return [self._estimator_type.initialize(self.create_random_set()) for val in range(0, size)]
+        return [self._estimator.initialize(self.create_random_set()) for val in range(0, size)]
 
     def grade(self, population: list) -> float:
         """
@@ -121,17 +165,29 @@ class EvolutionaryStrategy(BaseStrategy):
 
         children = random.randint(1, self._max_children)
 
-        return [self._estimator_type.initialize(parameters={param: random.choice([parent1.parameters[param], parent2.parameters[param]]) for param in self._parameters}) for _ in range(0, children)]
+        estimators = []
+        for _ in range(0, children):
 
-    def mutate(self, parameters: dict) -> dict:
+            if self._parameters.data_balancing_parameters is None:
+                balance_params = None
+            else:
+                balance_params = {param:random.choice([parent1.parameters.data_balancing_parameters[param], parent2.parameters.data_balancing_parameters[param]]) for param in self._parameters.data_balancing_parameters}
+
+            model_params = {param:random.choice([parent1.parameters.model_parameters[param], parent2.parameters.model_parameters[param]]) for param in self._parameters.model_parameters}
+
+            estimators.append(self._estimator.initialize(EstimatorParameters(model_parameters=model_params, data_balancing_parameters=balance_params)))
+
+        return estimators
+
+    def mutate(self, estimator_parameters: EstimatorParameters) -> EstimatorParameters:
         """
         Randomly mutate one part of the parameters.
 
         Parameters:
-            parameters (dict): The model parameters to mutate
+            estimator_parameters (EstimatorParameters): The estimator parameters to mutate
 
         Returns:
-            (dict): A randomly mutated parameters
+            (EstimatorParameters): A randomly mutated parameters
 
         """
 
@@ -139,12 +195,14 @@ class EvolutionaryStrategy(BaseStrategy):
         random.seed(self._random_state)
 
         # Choose a random key.
-        mutation = random.choice(list(self._parameters.keys()))
+        key = random.choice(list(estimator_parameters.model_parameters.keys()))
+        estimator_parameters.model_parameters[key] = random.choice(self._parameters.model_parameters[key])
 
-        # Mutate one of the params.
-        parameters[mutation] = random.choice(self._parameters[mutation])
+        if estimator_parameters.data_balancing_parameters is not None:
+            key = random.choice(list(estimator_parameters.data_balancing_parameters.keys()))
+            estimator_parameters.data_balancing_parameters[key] = random.choice(self._parameters.data_balancing_parameters[key])
 
-        return parameters
+        return estimator_parameters
 
     def execute(self, population: List[Type[T]]) -> List[T]:
         """
@@ -180,7 +238,7 @@ class EvolutionaryStrategy(BaseStrategy):
         # Randomly mutate some of the networks we're keeping.
         for i in range(len(parents)):
             if self.mutate_chance > random.random():
-                parents[i] = self._estimator_type.initialize(parameters=self.mutate(parents[i].parameters))
+                parents[i] = self._estimator.initialize(parameters=self.mutate(parents[i].parameters))
 
         # Now find out how many spots we have left to fill.
         parents_length = len(parents)
