@@ -62,6 +62,16 @@ class StrategyParameters(object):
         """
         return self._model_parameters
 
+    @model_parameters.setter
+    def model_parameters(self, value: dict) -> None:
+        """
+        Setter
+
+        Parameters:
+            value (dict): The new parameters
+        """
+        self._model_parameters = value
+
     @property
     def data_balancing_parameters(self) -> dict:
         """
@@ -71,6 +81,16 @@ class StrategyParameters(object):
             (dict): The data balancing parameters
         """
         return self._data_balancing_parameters
+
+    @data_balancing_parameters.setter
+    def data_balancing_parameters(self, value: dict) -> None:
+        """
+        Setter
+
+        Parameters:
+            value (dict): The new parameters
+        """
+        self._data_balancing_parameters = value
 
 class EvolutionaryStrategy(BaseStrategy):
     """Class that implements genetic algorithm for MLP optimization."""

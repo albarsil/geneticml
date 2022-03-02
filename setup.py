@@ -7,7 +7,7 @@ def readme():
  
 setup(
     name='geneticml',
-    version='1.0.6',
+    version='1.0.7',
     description='A simple and lightweight genetic algorithm for optimization of any machine learning model',
     long_description=readme(),
     long_description_content_type="text/markdown",
