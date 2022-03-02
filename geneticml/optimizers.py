@@ -86,10 +86,8 @@ class GeneticOptimizer(BaseOptimizer):
 
                 # Do the data balancing if the estimator have it
                 if x.has_data_balancing:
-                    print(len(train_data.data))
                     xtrain, ytrain = x.data_balance(data=train_data.data, target=train_data.target)
                     train_data = DataLoader(data=xtrain, target=ytrain)
-                    print(len(train_data.data))
 
                 # Train the model
                 x.fit(train_data.data, train_data.target)
